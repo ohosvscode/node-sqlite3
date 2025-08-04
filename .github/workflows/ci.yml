@@ -65,7 +65,7 @@ jobs:
       
       - name: Build project
         run: |
-          npm install --verbose --build-from-source --runtime=electron --arch=x64 --target=20.18.1 --dist-url=https://electronjs.org/headers
+          npm install --verbose --build-from-source --runtime=electron --target=20.18.1 --dist-url=https://electronjs.org/headers
           
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
