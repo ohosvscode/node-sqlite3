@@ -19,7 +19,17 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Cache SDK
+        id: cache-sdk
+        uses: actions/cache@v3
+        with:
+          path: /opt/sdk
+          key: arkts-sdk-api18-x86-linux-${{ runner.os }}
+          restore-keys: |
+            arkts-sdk-api18-x86-linux-
+
       - name: Download SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
         run: npx -p @arkts/sdk-downloader arkcode-sdk-downloader download --api-version API18 --target-dir /opt/sdk --arch X86 --os Linux
       
       - name: Set SDK permissions
@@ -32,7 +42,7 @@ jobs:
           echo "Checking SDK files:"
           ls -la /opt/sdk/native/llvm/bin/clang
           /opt/sdk/native/llvm/bin/clang --version
-          
+
       - name: Set up environment
         run: |
           echo "CC=/opt/sdk/native/llvm/bin/clang" >> $GITHUB_ENV
