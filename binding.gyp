@@ -17,12 +17,14 @@
       "msvs_settings": {
         "VCCLCompilerTool": { "ExceptionHandling": 1 },
       },
-      "include_dirs": [
-        "<!@(node -p \"require('node-addon-api').include\")"],
+      "include_dirs": ["<!@(node -p \"require('node-addon-api').include\")","electron-napi-library/include"],
+      "libraries": [
+        "<(module_root_dir)/electron-napi-library/lib/libshim.a",
+        ],
       "conditions": [
         ["sqlite != 'internal'", {
             "include_dirs": [
-              "<!@(node -p \"require('node-addon-api').include\")", "<(sqlite)/include" ],
+              "<!@(node -p \"require('node-addon-api').include\")", "<(sqlite)/include", "electron-napi-library/include"],
             "libraries": [
                "-l<(sqlite_libname)"
             ],
@@ -52,7 +54,7 @@
         "src/node_sqlite3.cc",
         "src/statement.cc"
       ],
-      "defines": [ "NAPI_VERSION=<(napi_build_version)", "NAPI_DISABLE_CPP_EXCEPTIONS=1" ]
+      "defines": [ "NAPI_VERSION=<(napi_build_version)", "NAPI_DISABLE_CPP_EXCEPTIONS=1", "HIDE_NAPI_AND_UV"]
     }
   ]
 }
