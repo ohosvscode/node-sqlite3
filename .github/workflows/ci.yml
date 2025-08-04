@@ -7,158 +7,53 @@ on:
       - master
     tags:
       - '*'
-env:
-  FORCE_COLOR: 1
-concurrency:
-  group: ${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-20.04
-          - windows-latest
-        host:
-          - x64
-        target:
-          - x64
-        node:
-          - 18
-        include:
-          - os: windows-latest
-            node: 18
-            host: x86
-            target: x86
-          - os: macos-m1
-            node: 18
-            host: arm64
-            target: arm64
-    name: ${{ matrix.os }} (host=${{ matrix.host }}, target=${{ matrix.target }})
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-          architecture: ${{ matrix.host }}
-
-      - name: Add yarn (self-hosted)
-        if: matrix.os == 'macos-m1'
-        run: npm install -g yarn
-
-      - name: Add setuptools for Python 3.12 (temp)
-        if: matrix.os != 'macos-m1'
-        run: pip install setuptools
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3
-        if: contains(matrix.os, 'windows')
-        with:
-          msbuild-architecture: ${{ matrix.target }}
-
-      - name: Install dependencies
-        run: yarn install --ignore-scripts
-
-      - name: Check Node compatibility
-        run: node tools/semver-check.js
-
-      - name: Add env vars
-        shell: bash
-        run: |
-          echo "V=1" >> $GITHUB_ENV
-
-          if [ "${{ matrix.target }}" = "x86" ]; then
-            echo "TARGET=ia32" >> $GITHUB_ENV
-          else
-            echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
-          fi
-
-      - name: Add Linux env vars
-        if: contains(matrix.os, 'ubuntu')
-        run: |
-          echo "CFLAGS=${CFLAGS:-} -include ../src/gcc-preinclude.h" >> $GITHUB_ENV
-          echo "CXXFLAGS=${CXXFLAGS:-} -include ../src/gcc-preinclude.h" >> $GITHUB_ENV
-
-      - name: Build binaries
-        run: yarn prebuild -a ${{ env.TARGET }}
-
-      - name: Print binary info
-        if: contains(matrix.os, 'ubuntu')
-        run: |
-          ldd build/**/node_sqlite3.node
-          echo "---"
-          nm build/**/node_sqlite3.node | grep "GLIBC_" | c++filt || true
-          echo "---"
-          file build/**/node_sqlite3.node
-
-      - name: Run tests
-        run: yarn test
-
-      - name: Upload binaries to commit artifacts
-        uses: actions/upload-artifact@v3
-        if: matrix.node == 18
-        with:
-          name: prebuilt-binaries
-          path: prebuilds/*
-          retention-days: 7
-
-      - name: Upload binaries to GitHub Release
-        run: yarn upload --upload-all ${{ github.token }}
-        if: matrix.node == 18 && startsWith(github.ref, 'refs/tags/')
-
-  build-qemu:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - 18
-        target:
-          - linux/arm64
-        variant:
-          - bullseye
-          - alpine3.15
-        include:
-          # musl x64 builds
-          - target: linux/amd64
-            variant: alpine3.15
-            node: 18
-    name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build binaries and test
-        run: |
-          docker buildx build \
-            --file ./tools/BinaryBuilder.Dockerfile \
-            --load \
-            --tag sqlite-builder \
-            --platform ${{ matrix.target }} \
-            --no-cache \
-            --build-arg VARIANT=${{ matrix.variant }} \
-            --build-arg NODE_VERSION=${{ matrix.node }} \
-            .
-          CONTAINER_ID=$(docker create -it sqlite-builder)
-          docker cp $CONTAINER_ID:/usr/src/build/prebuilds/ ./prebuilds
-
-      - name: Upload binaries to commit artifacts
-        uses: actions/upload-artifact@v3
-        if: matrix.node == 18
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          name: prebuilt-binaries
-          path: prebuilds/*
-          retention-days: 7
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org/'
 
-      - name: Upload binaries to GitHub Release
-        run: yarn install --ignore-scripts && yarn upload --upload-all ${{ github.token }}
-        if: matrix.node == 18 && startsWith(github.ref, 'refs/tags/')
+      - name: Install sdk
+        run: npm install -g @arkts/sdk-downloader
+
+      - name: Download SDK
+        run: npx @arkts/sdk-downloader download --api-version API18 --output /opt/sdk --arch X86 --os Linux
+
+      - name: Set up environment
+        run: |
+          echo "SDK_PATH=/opt/sdk" >> $GITHUB_ENV
+          echo "CC=${SDK_PATH}/16/native/llvm/bin/clang" >> $GITHUB_ENV
+          echo "CXX=${SDK_PATH}/16/native/llvm/bin/clang++" >> $GITHUB_ENV
+          echo "LD=${SDK_PATH}/16/native/llvm/bin/lld" >> $GITHUB_ENV
+          echo "STRIP=${SDK_PATH}/16/native/llvm/bin/llvm-strip" >> $GITHUB_ENV
+          echo "RANLIB=${SDK_PATH}/16/native/llvm/bin/llvm-ranlib" >> $GITHUB_ENV
+          echo "OBJDUMP=${SDK_PATH}/16/native/llvm/bin/llvm-objdump" >> $GITHUB_ENV
+          echo "AR=${SDK_PATH}/16/native/llvm/bin/llvm-ar" >> $GITHUB_ENV
+          echo "NM=${SDK_PATH}/16/native/llvm/bin/llvm-nm" >> $GITHUB_ENV
+          echo "OBJCOPY=${SDK_PATH}/16/native/llvm/bin/llvm-objcopy" >> $GITHUB_ENV
+          echo "CFLAGS=-fPIC -D__MUSL__=1" >> $GITHUB_ENV
+          echo "CXXFLAGS=-fPIC -D__MUSL__=1" >> $GITHUB_ENV
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 python3-pip
+      
+      - name: Build project
+        run: |
+          npm install --verbose --build-from-source --runtime=electron --arch=x64 --target=20.18.1 --dist-url=https://electronjs.org/headers
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: |
+            build/Release/*.so
+            build/Release/*.node
