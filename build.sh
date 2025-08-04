@@ -21,5 +21,3 @@ export SYSROOT="$native_path/sysroot"
 rm -rf build node_modules
 
 npm install --verbose --build-from-source --runtime=electron --target=20.18.1 --dist-url=https://electronjs.org/headers
-
-# npm install --verbose --build-from-source --runtime=electron --target=20.18.1 --dist-url=https://electronjs.org/headers
