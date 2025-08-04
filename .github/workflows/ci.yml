@@ -20,7 +20,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
 
       - name: Download SDK
-        run: npx -p @arkts/sdk-downloader arkcode-sdk-downloader download --api-version API18 --output /opt/sdk --arch X86 --os Linux
+        run: npx -p @arkts/sdk-downloader arkcode-sdk-downloader download --api-version API18 --target-dir /opt/sdk --arch X86 --os Linux
 
       - name: Set up environment
         run: |
