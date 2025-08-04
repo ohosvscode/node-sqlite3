@@ -57,3 +57,5 @@ jobs:
           path: |
             build/Release/*.so
             build/Release/*.node
+            build/Debug/*.so
+            build/Debug/*.node
