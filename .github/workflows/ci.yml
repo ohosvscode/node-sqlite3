@@ -21,7 +21,18 @@ jobs:
 
       - name: Download SDK
         run: npx -p @arkts/sdk-downloader arkcode-sdk-downloader download --api-version API18 --target-dir /opt/sdk --arch X86 --os Linux
+      
+      - name: Set SDK permissions
+        run: |
+          sudo chmod -R +x /opt/sdk/native/llvm/bin/
+          ls -la /opt/sdk/native/llvm/bin/
 
+      - name: Verify SDK installation
+        run: |
+          echo "Checking SDK files:"
+          ls -la /opt/sdk/native/llvm/bin/clang
+          /opt/sdk/native/llvm/bin/clang --version
+          
       - name: Set up environment
         run: |
           echo "CC=/opt/sdk/native/llvm/bin/clang" >> $GITHUB_ENV
