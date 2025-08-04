@@ -42,6 +42,7 @@ jobs:
           echo "Checking SDK files:"
           ls -la /opt/sdk/native/llvm/bin/clang
           /opt/sdk/native/llvm/bin/clang-15 --version
+          ls -la /opt/sdk/native/llvm/bin/
 
       - name: Set up environment
         run: |
