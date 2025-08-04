@@ -24,16 +24,15 @@ jobs:
 
       - name: Set up environment
         run: |
-          echo "SDK_PATH=/opt/sdk" >> $GITHUB_ENV
-          echo "CC=${SDK_PATH}/native/llvm/bin/clang" >> $GITHUB_ENV
-          echo "CXX=${SDK_PATH}/native/llvm/bin/clang++" >> $GITHUB_ENV
-          echo "LD=${SDK_PATH}/native/llvm/bin/lld" >> $GITHUB_ENV
-          echo "STRIP=${SDK_PATH}/native/llvm/bin/llvm-strip" >> $GITHUB_ENV
-          echo "RANLIB=${SDK_PATH}/native/llvm/bin/llvm-ranlib" >> $GITHUB_ENV
-          echo "OBJDUMP=${SDK_PATH}/native/llvm/bin/llvm-objdump" >> $GITHUB_ENV
-          echo "AR=${SDK_PATH}/native/llvm/bin/llvm-ar" >> $GITHUB_ENV
-          echo "NM=${SDK_PATH}/native/llvm/bin/llvm-nm" >> $GITHUB_ENV
-          echo "OBJCOPY=${SDK_PATH}/native/llvm/bin/llvm-objcopy" >> $GITHUB_ENV
+          echo "CC=/opt/sdk/native/llvm/bin/clang" >> $GITHUB_ENV
+          echo "CXX=/opt/sdk/native/llvm/bin/clang++" >> $GITHUB_ENV
+          echo "LD=/opt/sdk/native/llvm/bin/lld" >> $GITHUB_ENV
+          echo "STRIP=/opt/sdk/native/llvm/bin/llvm-strip" >> $GITHUB_ENV
+          echo "RANLIB=/opt/sdk/native/llvm/bin/llvm-ranlib" >> $GITHUB_ENV
+          echo "OBJDUMP=/opt/sdk/native/llvm/bin/llvm-objdump" >> $GITHUB_ENV
+          echo "AR=/opt/sdk/native/llvm/bin/llvm-ar" >> $GITHUB_ENV
+          echo "NM=/opt/sdk/native/llvm/bin/llvm-nm" >> $GITHUB_ENV
+          echo "OBJCOPY=/opt/sdk/native/llvm/bin/llvm-objcopy" >> $GITHUB_ENV
           echo "CFLAGS=-fPIC -D__MUSL__=1" >> $GITHUB_ENV
           echo "CXXFLAGS=-fPIC -D__MUSL__=1" >> $GITHUB_ENV
       
